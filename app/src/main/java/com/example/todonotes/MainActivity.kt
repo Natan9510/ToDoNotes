@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
 
     lateinit var appDataBase: AppDataBase
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate: MainActivity")
@@ -118,6 +117,7 @@ class MainActivity : ComponentActivity() {
             //copy - копіює всі дані, крім isChecked - його замінює на той, який передаю
             //else - якщо елемент не ToDoListItem або ToDoListItem, але не та id, то дані залишаємо як є
             .map { if(it is ToDoBaseListItem.ToDoListItem && it.id == id) it.copy(isChecked = isChecked) else it }
+//            .filterIsInstance(ToDoBaseListItem.ToDoListItem::class.java)
             .toMutableList()
         val count = toDoList.count { (it as? ToDoBaseListItem.ToDoListItem)?.isChecked == true }
 
@@ -134,19 +134,29 @@ class MainActivity : ComponentActivity() {
             val checkedItemsHeader = ToDoBaseListItem.CheckedItemsHeader("Checked items $count")
             //any - вертає true,якщо хоча б один елемент відповідає умові
             if(toDoListSorted.any { it is ToDoBaseListItem.CheckedItemsHeader }){
-//                val headerItem = toDoListSorted.find { it is ToDoBaseListItem.CheckedItemsHeader }
-//                        as ToDoBaseListItem.CheckedItemsHeader
-                //headerItem.copy(text = "Checked items $count")
                 val headerPosition = toDoListSorted.indexOfFirst { it is ToDoBaseListItem.CheckedItemsHeader }
                 //set - замінюємо значення
                 toDoListSorted.set(headerPosition, checkedItemsHeader)
             }else {
                 toDoListSorted.add(
                     firstCheckedItemPosition,
-                    checkedItemsHeader //add $count
+                    checkedItemsHeader
                 )
             }
         }
+
+        val pressedItem = toDoListSorted.find { item -> (item as? ToDoBaseListItem.ToDoListItem)?.id == id }
+        val addButtonIndex: Int = toDoListSorted.indexOfFirst { it is ToDoBaseListItem.AddToDoItemButton }
+        if(!isChecked){
+            toDoListSorted.remove(pressedItem)
+            //let - гарантує, те, що в фігурних дужках визветься тільки, якщо pressedItem не null
+            //find може повернути null
+            pressedItem?.let { toDoListSorted.add(addButtonIndex, pressedItem) }
+        }
+
+        //якщо айтем був чекед, а став анчекед, то перемістити його вгору над кнопкою - після останнього не чекнутого айтема
+        Log.d(TAG, "updateCheckState: $isChecked")
+
         //myList = toDoListSorted
         toDoAdapter.submitList(toDoListSorted)
         myList = toDoListSorted

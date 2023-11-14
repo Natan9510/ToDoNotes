@@ -69,6 +69,7 @@ class ToDoAdapter(
                 deleteItemCallback(toDoItem.id)
             })
             holder.checkBox.setOnCheckedChangeListener { buttonView, isChecked ->
+                //isPressed - коли юзер фізично натисне на чекбокс
                 if (buttonView.isPressed.not()) return@setOnCheckedChangeListener
                 itemCheckedCallback(toDoItem.id, isChecked)
             }
