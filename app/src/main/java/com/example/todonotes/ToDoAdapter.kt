@@ -1,5 +1,7 @@
 package com.example.todonotes
 
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,6 +10,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
@@ -18,7 +21,8 @@ import java.lang.IllegalArgumentException
 class ToDoAdapter(
     private val deleteItemCallback: (Int) -> Unit,
     private val itemCheckedCallback: (Int, Boolean) -> Unit,
-    private val addItemCallback: () -> Unit
+    private val addItemCallback: () -> Unit,
+    private val updateTextCallback: (Int, String) -> Unit
 ) :
     ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffCallback) {
 
@@ -63,7 +67,10 @@ class ToDoAdapter(
         } else if (holder is ToDoViewHolder) {
             val toDoItem = getItem(position) as ToDoBaseListItem.ToDoListItem
             holder.checkBox.isChecked = toDoItem.isChecked
+            holder.removeTextChangeListener()
             holder.toDoItemText.setText(toDoItem.text)
+
+            holder.addTextChangeListener(toDoItem.id)
 
             holder.deleteItem.setOnClickListener(View.OnClickListener {
                 deleteItemCallback(toDoItem.id)
@@ -76,10 +83,33 @@ class ToDoAdapter(
         }
     }
 
-    class ToDoViewHolder(val itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ToDoViewHolder(val itemView: View) : RecyclerView.ViewHolder(itemView) {
         val checkBox: CheckBox = itemView.findViewById(R.id.checkbox)
         val toDoItemText: EditText = itemView.findViewById(R.id.toDoItem_edit_text)
         val deleteItem: AppCompatImageButton = itemView.findViewById(R.id.delete_button)
+        val textChangeListener = object : TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                id?.let { updateTextCallback(it, s.toString()) }
+            }
+        }
+
+        var id: Int? = null
+
+        fun removeTextChangeListener(){
+            toDoItemText.removeTextChangedListener(textChangeListener)
+        }
+        fun addTextChangeListener(id: Int){
+            toDoItemText.addTextChangedListener(textChangeListener)
+            this.id = id
+        }
     }
 
     class CheckedItemsViewHolder(val itemView: View) : RecyclerView.ViewHolder(itemView) {

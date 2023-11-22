@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import androidx.activity.ComponentActivity
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -28,7 +30,8 @@ class MainActivity : ComponentActivity() {
 
     var toDoAdapter: ToDoAdapter = ToDoAdapter(deleteItemCallback = { id -> deleteItem(id)},
         itemCheckedCallback = { id, isChecked -> updateCheckState(id, isChecked) },
-        addItemCallback = { addItem() })
+        addItemCallback = { addItem() },
+        updateTextCallback = {id, text -> updateText(id, text)})
 
     lateinit var appDataBase: AppDataBase
 
@@ -111,7 +114,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateCheckState(id: Int, isChecked: Boolean) {
-
+        Log.d(TAG, "updateCheckState: $myList")
         val toDoList: MutableList<ToDoBaseListItem> = myList
             //map - можна обновляти дані в списку, а не тільки приводити до типу
             //copy - копіює всі дані, крім isChecked - його замінює на той, який передаю
@@ -127,14 +130,18 @@ class MainActivity : ComponentActivity() {
         //indexOfFirst - Returns index of the first element matching the given predicate, or -1 if the list does not contain such element.
         val firstCheckedItemPosition =
             toDoListSorted.indexOfFirst { (it as? ToDoBaseListItem.ToDoListItem)?.isChecked == true }
-
+// Якшо немає чекнутих айтемів , але є хедер для чекнутих, то прибрати хедер
+        //то прибрати хедер який знаходиться під кнопкою add item
+        val checkedItemsHeader = ToDoBaseListItem.CheckedItemsHeader("Checked items $count")
         if (firstCheckedItemPosition == -1) {
             // Don't need to add header if there is no any checked item
-        } else {
-            val checkedItemsHeader = ToDoBaseListItem.CheckedItemsHeader("Checked items $count")
-            //any - вертає true,якщо хоча б один елемент відповідає умові
             if(toDoListSorted.any { it is ToDoBaseListItem.CheckedItemsHeader }){
-                val headerPosition = toDoListSorted.indexOfFirst { it is ToDoBaseListItem.CheckedItemsHeader }
+                toDoListSorted.removeAll { it is ToDoBaseListItem.CheckedItemsHeader }
+            }
+        } else {
+            //any - вертає true,якщо хоча б один елемент відповідає умові
+            if(toDoListSorted.any { it is ToDoBaseListItem.CheckedItemsHeader }){ //якщо в відсортованому списку є чекед хедер
+                val headerPosition = toDoListSorted.indexOfFirst { it is ToDoBaseListItem.CheckedItemsHeader } //позиція хедера
                 //set - замінюємо значення
                 toDoListSorted.set(headerPosition, checkedItemsHeader)
             }else {
@@ -154,7 +161,6 @@ class MainActivity : ComponentActivity() {
             pressedItem?.let { toDoListSorted.add(addButtonIndex, pressedItem) }
         }
 
-        //якщо айтем був чекед, а став анчекед, то перемістити його вгору над кнопкою - після останнього не чекнутого айтема
         Log.d(TAG, "updateCheckState: $isChecked")
 
         //myList = toDoListSorted
@@ -162,4 +168,12 @@ class MainActivity : ComponentActivity() {
         myList = toDoListSorted
     }
 
+    private fun updateText(id: Int, text: String){
+        Log.d(TAG, "updateText: $id $text")
+        myList = myList
+            .map { if (it is ToDoBaseListItem.ToDoListItem && it.id == id) {
+                it.copy(text = text)}
+            else it }.toMutableList()
+        Log.d(TAG, "updateText: $myList")
+    }
 }
