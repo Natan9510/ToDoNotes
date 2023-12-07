@@ -3,11 +3,12 @@ package com.example.todonotes
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "todo_table")
-data class ToDoItemEntity (
+@Entity(tableName = "child_todo_items")
+data class ToDoChildEntity (
     @PrimaryKey(autoGenerate = true)
     val todoId: Int? = null,
     val toDoText: String,
-    val isChecked: Boolean = false
+    val isChecked: Boolean = false,
+    val parentId: Int
 ){
 }

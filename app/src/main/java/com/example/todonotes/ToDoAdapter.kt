@@ -10,12 +10,9 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageButton
-import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import org.w3c.dom.Text
 import java.lang.IllegalArgumentException
 
 class ToDoAdapter(
@@ -24,13 +21,13 @@ class ToDoAdapter(
     private val addItemCallback: () -> Unit,
     private val updateTextCallback: (Int, String) -> Unit
 ) :
-    ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffCallback) {
+    ListAdapter<ToDoBaseItem, RecyclerView.ViewHolder>(diffCallback) {
 
     override fun getItemViewType(position: Int): Int {
         return when (getItem(position)) {
-            is ToDoBaseListItem.CheckedItemsHeader -> CHECKED_HEADER_VIEW_TYPE
-            is ToDoBaseListItem.ToDoListItem -> TODO_ITEM_VIEW_TYPE
-            ToDoBaseListItem.AddToDoItemButton -> ADD_TO_DO_VIEW_TYPE
+            is ToDoBaseItem.CheckedItemsHeader -> CHECKED_HEADER_VIEW_TYPE
+            is ToDoBaseItem.ToDoItem -> TODO_ITEM_VIEW_TYPE
+            ToDoBaseItem.AddToDoItemButton -> ADD_TO_DO_VIEW_TYPE
         }
     }
 
@@ -61,11 +58,11 @@ class ToDoAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is CheckedItemsViewHolder) {
             holder.headerCheckedTextView.text =
-                (getItem(position) as ToDoBaseListItem.CheckedItemsHeader).text
+                (getItem(position) as ToDoBaseItem.CheckedItemsHeader).text
         } else if (holder is AddToDoItemViewHolder) {
             holder.addToDoItemButton.setOnClickListener { addItemCallback() }
         } else if (holder is ToDoViewHolder) {
-            val toDoItem = getItem(position) as ToDoBaseListItem.ToDoListItem
+            val toDoItem = getItem(position) as ToDoBaseItem.ToDoItem
             holder.checkBox.isChecked = toDoItem.isChecked
             holder.removeTextChangeListener()
             holder.toDoItemText.setText(toDoItem.text)
@@ -125,26 +122,26 @@ class ToDoAdapter(
         private const val CHECKED_HEADER_VIEW_TYPE = 2
         private const val ADD_TO_DO_VIEW_TYPE = 3
 
-        private val diffCallback = object : DiffUtil.ItemCallback<ToDoBaseListItem>() {
+        private val diffCallback = object : DiffUtil.ItemCallback<ToDoBaseItem>() {
             override fun areItemsTheSame(
-                oldItem: ToDoBaseListItem,
-                newItem: ToDoBaseListItem
+                oldItem: ToDoBaseItem,
+                newItem: ToDoBaseItem
             ): Boolean {
                 return when (oldItem) {
-                    is ToDoBaseListItem.CheckedItemsHeader -> oldItem.text == (newItem as? ToDoBaseListItem.ToDoListItem)?.text
-                    ToDoBaseListItem.AddToDoItemButton -> oldItem == newItem
-                    is ToDoBaseListItem.ToDoListItem -> oldItem.id == (newItem as? ToDoBaseListItem.ToDoListItem)?.id
+                    is ToDoBaseItem.CheckedItemsHeader -> oldItem.text == (newItem as? ToDoBaseItem.CheckedItemsHeader)?.text
+                    ToDoBaseItem.AddToDoItemButton -> oldItem == newItem
+                    is ToDoBaseItem.ToDoItem -> oldItem.id == (newItem as? ToDoBaseItem.ToDoItem)?.id
                 }
             }
 
             override fun areContentsTheSame(
-                oldItem: ToDoBaseListItem,
-                newItem: ToDoBaseListItem
+                oldItem: ToDoBaseItem,
+                newItem: ToDoBaseItem
             ): Boolean {
                 return when (oldItem) {
-                    is ToDoBaseListItem.CheckedItemsHeader -> false
-                    is ToDoBaseListItem.ToDoListItem -> oldItem == (newItem as? ToDoBaseListItem.ToDoListItem)
-                    ToDoBaseListItem.AddToDoItemButton -> false
+                    is ToDoBaseItem.CheckedItemsHeader -> false
+                    is ToDoBaseItem.ToDoItem -> oldItem == (newItem as? ToDoBaseItem.ToDoItem)
+                    ToDoBaseItem.AddToDoItemButton -> false
                 }
             }
         }
