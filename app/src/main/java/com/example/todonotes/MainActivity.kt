@@ -1,10 +1,19 @@
 package com.example.todonotes
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,17 +31,19 @@ class MainActivity : ComponentActivity() {
     lateinit var recyclerView: RecyclerView
     lateinit var saveButton: Button
     lateinit var titleEditText: EditText
+    lateinit var backButton: ImageView
+    lateinit var appDataBase: AppDataBase
+    lateinit var taskChildDao: ToDoChildDAO
+    lateinit var taskParentDAO: ToDoParentDAO
 
     var myList: MutableList<ToDoBaseItem> = mutableListOf()
+    var listOfLists: MutableList<ToDoBaseListItem> = mutableListOf()
 
     var toDoAdapter: ToDoAdapter = ToDoAdapter(deleteItemCallback = { id -> deleteItem(id)},
         itemCheckedCallback = { id, isChecked -> updateCheckState(id, isChecked) },
         addItemCallback = { addItem() },
         updateTextCallback = {id, text -> updateText(id, text)})
 
-    lateinit var appDataBase: AppDataBase
-    lateinit var taskChildDao: ToDoChildDAO
-    lateinit var taskParentDAO: ToDoParentDAO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +52,7 @@ class MainActivity : ComponentActivity() {
 
         saveButton = findViewById(R.id.save_button)
         titleEditText = findViewById(R.id.title_edit_text)
+        backButton = findViewById(R.id.back_button)
 
         appDataBase =
             Room.databaseBuilder(applicationContext, AppDataBase::class.java, "database_name")
@@ -53,12 +65,18 @@ class MainActivity : ComponentActivity() {
             saveToDatabase()
         }
 
+//        backButton.setOnClickListener{
+//            listOfLists.add(ToDoBaseListItem.ToDoListItem(null, "title = titleEditText.toString()"))
+//            finish()
+//        }
+
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         recyclerView.adapter = toDoAdapter
-        subscribeForToDoItems()
-
+//        subscribeForToDoItems()
+        myList.add(ToDoBaseItem.AddToDoItemButton)
+        toDoAdapter.submitList(myList)
     }
 
     private fun subscribeForToDoItems() {
@@ -190,7 +208,7 @@ class MainActivity : ComponentActivity() {
 
     private fun saveToDatabase(){
         lifecycleScope.launch {
-            val insertedParentId = taskParentDAO.insert(ToDoParentEntity(null, title = titleEditText.toString())).toInt()
+            val insertedParentId = taskParentDAO.insert(ToDoParentEntity(null, title = titleEditText.text.toString())).toInt()
             val toDoChildEntityList: MutableList<ToDoChildEntity> =
                 myList.filterIsInstance<ToDoBaseItem.ToDoItem>().map{
                     ToDoChildEntity(todoId = null, toDoText = it.text.toString(), isChecked = it.isChecked, insertedParentId)
@@ -199,5 +217,6 @@ class MainActivity : ComponentActivity() {
                 taskChildDao.insert(it)
             }
         }
+        finish()
     }
 }

@@ -11,9 +11,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.IllegalArgumentException
 
-class ToDoListsAdapter (
-    private val addListCallback: () -> Unit
-) : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffItemCallback) {
+class ToDoListsAdapter () : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffItemCallback) {
 
     override fun getItemViewType(position: Int): Int {
         return when (getItem(position)){

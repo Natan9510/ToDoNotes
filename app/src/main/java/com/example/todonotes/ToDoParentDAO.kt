@@ -23,4 +23,7 @@ interface ToDoParentDAO {
 
     @Query("DELETE FROM parent_todo_items")
     fun delete()
+
+    @Query("SELECT * FROM parent_todo_items")
+    fun observeAllItems(): Flow<List<ToDoParentEntity>>
 }
