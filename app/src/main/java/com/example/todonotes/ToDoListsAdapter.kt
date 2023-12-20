@@ -3,15 +3,15 @@ package com.example.todonotes
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.IllegalArgumentException
 
-class ToDoListsAdapter () : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffItemCallback) {
+class ToDoListsAdapter (
+    private val onToDoListClickedCallback: (ToDoBaseListItem) -> Unit
+) : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffItemCallback) {
 
     override fun getItemViewType(position: Int): Int {
         return when (getItem(position)){
@@ -23,7 +23,7 @@ class ToDoListsAdapter () : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolde
             TODO_LIST_VIEW_TYPE -> {
                 val viewToDoList = LayoutInflater.from(parent.context)
                     .inflate(R.layout.to_do_list_item, parent, false)
-                return ToDoListViewHolder(viewToDoList)
+                 ToDoListViewHolder(viewToDoList)
             }
 
             else -> throw IllegalArgumentException("No such view type - $viewType")
@@ -32,11 +32,14 @@ class ToDoListsAdapter () : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolde
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val toDoListItem = getItem(position) as ToDoBaseListItem.ToDoListItem
-        (holder as ToDoListViewHolder).title.setText(toDoListItem.title)
+        (holder as ToDoListViewHolder).title.text = toDoListItem.title
+        (holder as ToDoListViewHolder).itemView.setOnClickListener{
+            onToDoListClickedCallback(toDoListItem)
+        }
     }
 
-    class ToDoListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
-        val title: TextView = itemView.findViewById(R.id.title_to_do_list_textview)
+   inner class ToDoListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
+       val title: TextView = itemView.findViewById(R.id.title_to_do_list_textview)
     }
 
     companion object {

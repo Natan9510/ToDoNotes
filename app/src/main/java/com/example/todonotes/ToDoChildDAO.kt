@@ -15,6 +15,9 @@ interface ToDoChildDAO {
     @Query("SELECT * FROM child_todo_items")
     fun observeAllItems(): Flow<List<ToDoChildEntity>>
 
+    @Query("SELECT * FROM child_todo_items WHERE parentId = :parentID")
+    fun observeItemsForOneParent(parentID: Int): Flow<List<ToDoChildEntity>>
+
     @Insert
     fun insertAll(vararg todo: ToDoChildEntity)
 

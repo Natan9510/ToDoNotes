@@ -1,19 +1,11 @@
 package com.example.todonotes
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -74,14 +66,18 @@ class MainActivity : ComponentActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
 
         recyclerView.adapter = toDoAdapter
-//        subscribeForToDoItems()
+        val parentId = intent.extras?.getInt("parent_id")
+        if(parentId != null && parentId != 0){ //0 - бо не переданий parent_id в extra - бо getInt вертає 0, якщо немає даних по такому ключу
+            subscribeForToDoItems(parentId)
+        }
+
         myList.add(ToDoBaseItem.AddToDoItemButton)
         toDoAdapter.submitList(myList)
     }
 
-    private fun subscribeForToDoItems() {
+    private fun subscribeForToDoItems(parentID: Int) {
         lifecycleScope.launch {
-            appDataBase.toDoChildDao.observeAllItems()
+            appDataBase.toDoChildDao.observeItemsForOneParent(parentID = parentID)
                 .flowWithLifecycle(
                     lifecycle,
                     Lifecycle.State.STARTED
@@ -208,13 +204,25 @@ class MainActivity : ComponentActivity() {
 
     private fun saveToDatabase(){
         lifecycleScope.launch {
-            val insertedParentId = taskParentDAO.insert(ToDoParentEntity(null, title = titleEditText.text.toString())).toInt()
-            val toDoChildEntityList: MutableList<ToDoChildEntity> =
-                myList.filterIsInstance<ToDoBaseItem.ToDoItem>().map{
-                    ToDoChildEntity(todoId = null, toDoText = it.text.toString(), isChecked = it.isChecked, insertedParentId)
-                }.toMutableList()
-            toDoChildEntityList.forEach {
-                taskChildDao.insert(it)
+            val selectedParentId = intent.extras?.getInt("parent_id")
+            if(selectedParentId != null && selectedParentId != 0){ //0 - бо не переданий parent_id в extra - бо getInt вертає 0, якщо немає даних по такому ключу
+                val toDoChildEntityList: MutableList<ToDoChildEntity> =
+                    myList.filterIsInstance<ToDoBaseItem.ToDoItem>().map{
+                        ToDoChildEntity(todoId = null, toDoText = it.text.toString(), isChecked = it.isChecked, selectedParentId)
+                    }.toMutableList()
+                toDoChildEntityList.forEach {
+                    taskChildDao.insert(it)
+                }
+            }else{
+                val insertedParentId = taskParentDAO.insert(ToDoParentEntity(null, title = titleEditText.text.toString())).toInt()
+
+                val toDoChildEntityList: MutableList<ToDoChildEntity> =
+                    myList.filterIsInstance<ToDoBaseItem.ToDoItem>().map{
+                        ToDoChildEntity(todoId = null, toDoText = it.text.toString(), isChecked = it.isChecked, insertedParentId)
+                    }.toMutableList()
+                toDoChildEntityList.forEach {
+                    taskChildDao.insert(it)
+                }
             }
         }
         finish()

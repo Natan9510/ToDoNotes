@@ -22,9 +22,11 @@ class ToDoListsActivity : ComponentActivity() {
     lateinit var recyclerView: RecyclerView
     lateinit var appDataBase: AppDataBase
     lateinit var taskParentDAO: ToDoParentDAO
+    lateinit var taskChildDAO: ToDoChildDAO
     lateinit var addToDoListButton: ImageButton
 
-    val toDoListsAdapter: ToDoListsAdapter = ToDoListsAdapter()
+    val toDoListsAdapter: ToDoListsAdapter = ToDoListsAdapter(onToDoListClickedCallback = { toDoBaseListItem -> onToDoListClicked(toDoBaseListItem)})
+
     var listOfLists: MutableList<ToDoBaseListItem> = mutableListOf()
 
     val TAG: String = "zlo"
@@ -46,6 +48,7 @@ class ToDoListsActivity : ComponentActivity() {
         appDataBase = Room.databaseBuilder(applicationContext, AppDataBase::class.java, "database_name")
             .build()
         taskParentDAO = appDataBase.toDoParentDao
+        taskChildDAO = appDataBase.toDoChildDao
 
         recyclerView = findViewById(R.id.recycler_view_for_lists)
         recyclerView.layoutManager = GridLayoutManager(this, 2)
@@ -81,6 +84,12 @@ class ToDoListsActivity : ComponentActivity() {
 //        listOfLists = updatedList
 //        toDoListsAdapter.submitList(updatedList)
         val intent: Intent = Intent(applicationContext, MainActivity::class.java)
+        startForResult.launch(intent)
+    }
+
+    private fun onToDoListClicked(toDoBaseListItem: ToDoBaseListItem) {
+        val intent: Intent = Intent(applicationContext, MainActivity::class.java)
+        intent.putExtra("parent_id", (toDoBaseListItem as ToDoBaseListItem.ToDoListItem).id)
         startForResult.launch(intent)
     }
 }
