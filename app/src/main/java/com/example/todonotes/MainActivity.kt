@@ -71,6 +71,9 @@ class MainActivity : ComponentActivity() {
             subscribeForToDoItems(parentId)
         }
 
+        findViewById<ImageView>(R.id.back_button).setOnClickListener{
+            finish()
+        }
         myList.add(ToDoBaseItem.AddToDoItemButton)
         toDoAdapter.submitList(myList)
     }
@@ -208,7 +211,7 @@ class MainActivity : ComponentActivity() {
             if(selectedParentId != null && selectedParentId != 0){ //0 - бо не переданий parent_id в extra - бо getInt вертає 0, якщо немає даних по такому ключу
                 val toDoChildEntityList: MutableList<ToDoChildEntity> =
                     myList.filterIsInstance<ToDoBaseItem.ToDoItem>().map{
-                        ToDoChildEntity(todoId = null, toDoText = it.text.toString(), isChecked = it.isChecked, selectedParentId)
+                        ToDoChildEntity(todoId = it.id, toDoText = it.text.toString(), isChecked = it.isChecked, selectedParentId)
                     }.toMutableList()
                 toDoChildEntityList.forEach {
                     taskChildDao.insert(it)
