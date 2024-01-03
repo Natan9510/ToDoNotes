@@ -10,7 +10,8 @@ import androidx.recyclerview.widget.RecyclerView
 import java.lang.IllegalArgumentException
 
 class ToDoListsAdapter (
-    private val onToDoListClickedCallback: (ToDoBaseListItem) -> Unit
+    private val onToDoListClickedCallback: (ToDoBaseListItem) -> Unit,
+    private val showAlertDialogCallback: (Int) -> Unit
 ) : ListAdapter<ToDoBaseListItem, RecyclerView.ViewHolder>(diffItemCallback) {
 
     override fun getItemViewType(position: Int): Int {
@@ -35,6 +36,10 @@ class ToDoListsAdapter (
         (holder as ToDoListViewHolder).title.text = toDoListItem.title
         (holder as ToDoListViewHolder).itemView.setOnClickListener{
             onToDoListClickedCallback(toDoListItem)
+        }
+        (holder as ToDoListViewHolder).itemView.setOnLongClickListener {
+            toDoListItem.id?.let { it1 -> showAlertDialogCallback(it1) }
+            return@setOnLongClickListener true
         }
     }
 

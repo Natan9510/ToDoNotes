@@ -27,6 +27,9 @@ interface ToDoChildDAO {
     @Query("UPDATE child_todo_items SET isChecked = :isChecked WHERE todoId = :id")
     suspend fun updateItemCheckedState(id: Int, isChecked: Boolean)
 
-    @Query("DELETE FROM child_todo_items")
-    fun delete()
+    @Query("DELETE FROM child_todo_items WHERE todoId = :id")
+    fun deleteByClickingOnToDoItem(id: Int)
+
+    @Query("DELETE FROM child_todo_items WHERE parentId = :parentId")
+    fun deleteByLongClickOnList(parentId: Int)
 }

@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -138,7 +139,12 @@ class MainActivity : ComponentActivity() {
         updatedList.removeAll { it is ToDoBaseItem.ToDoItem && it.id == id }
         myList = updatedList
         toDoAdapter.submitList(updatedList)
-    }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            appDataBase.toDoChildDao.deleteByClickingOnToDoItem(id)
+        }
+        }
+
 
     private fun updateCheckState(id: Int, isChecked: Boolean) {
         Log.d(TAG, "updateCheckState: $myList")
@@ -206,7 +212,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun saveToDatabase(){
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.Main) {
+            Log.d("zlo", "saveToDatabase: ${this.coroutineContext}")
             val selectedParentId = intent.extras?.getInt("parent_id")
             if(selectedParentId != null && selectedParentId != 0){ //0 - бо не переданий parent_id в extra - бо getInt вертає 0, якщо немає даних по такому ключу
                 val toDoChildEntityList: MutableList<ToDoChildEntity> =
@@ -227,7 +234,7 @@ class MainActivity : ComponentActivity() {
                     taskChildDao.insert(it)
                 }
             }
+            finish()
         }
-        finish()
     }
 }

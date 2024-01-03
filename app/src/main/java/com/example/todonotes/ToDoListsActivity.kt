@@ -1,6 +1,7 @@
 package com.example.todonotes
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -25,7 +27,10 @@ class ToDoListsActivity : ComponentActivity() {
     lateinit var taskChildDAO: ToDoChildDAO
     lateinit var addToDoListButton: ImageButton
 
-    val toDoListsAdapter: ToDoListsAdapter = ToDoListsAdapter(onToDoListClickedCallback = { toDoBaseListItem -> onToDoListClicked(toDoBaseListItem)})
+    val toDoListsAdapter: ToDoListsAdapter = ToDoListsAdapter(
+        onToDoListClickedCallback = { toDoBaseListItem -> onToDoListClicked(toDoBaseListItem)},
+        showAlertDialogCallback = {parentId ->  showAlertDialog(parentId)})
+
 
     var listOfLists: MutableList<ToDoBaseListItem> = mutableListOf()
 
@@ -91,5 +96,25 @@ class ToDoListsActivity : ComponentActivity() {
         val intent: Intent = Intent(applicationContext, MainActivity::class.java)
         intent.putExtra("parent_id", (toDoBaseListItem as ToDoBaseListItem.ToDoListItem).id)
         startForResult.launch(intent)
+    }
+
+    private fun showAlertDialog(parentId: Int) {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this) // context?
+        builder
+            .setMessage("Do you want to delete this list?")
+            .setPositiveButton("Yes"){ dialog, which ->
+                deleteToDoList(parentId)
+                dialog.dismiss()
+            }
+            .setNegativeButton("No"){ dialog, which ->
+                dialog.dismiss()
+            }.create().show()
+    }
+
+    private fun deleteToDoList(parentId: Int) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            appDataBase.toDoChildDao.deleteByLongClickOnList(parentId)
+            appDataBase.toDoParentDao.delete(parentId)
+        }
     }
 }

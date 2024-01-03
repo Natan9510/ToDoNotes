@@ -21,8 +21,8 @@ interface ToDoParentDAO {
 //    @Query("UPDATE child_todo_items SET isChecked = :isChecked WHERE todoId = :id")
 //    suspend fun updateItemCheckedState(id: Int, isChecked: Boolean)
 
-    @Query("DELETE FROM parent_todo_items")
-    fun delete()
+    @Query("DELETE FROM parent_todo_items WHERE parentId = :parentId")
+    fun delete(parentId: Int)
 
     @Query("SELECT * FROM parent_todo_items")
     fun observeAllItems(): Flow<List<ToDoParentEntity>>
